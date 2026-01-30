@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博格平衡量表 (Berg Balance Scale) 評估表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            /* 確保列印時完全隱藏標記為 no-print 的元素 */
+            .no-print { 
+                display: none !important; 
+            }
+            body { 
+                background: white !important; 
+                padding: 0 !important;
+            }
+            .a4-container { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                width: 100% !important;
+                padding: 10mm !important; /* 標準 A4 邊距 */
+            }
+            /* 避免表格內容被截斷 */
+            tr { page-break-inside: avoid; }
+        }
+        
+        body {
+            background-color: #f3f4f6;
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+        }
+        
+        .a4-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            background: white;
+            padding: 15mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .item-row:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        input[type="radio"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+
+        /* 螢幕上顯示的浮動計分列 */
+        .sticky-score {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: rgba(30, 64, 175, 0.95);
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 50px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="a4-container">
+    <!-- Header -->
+    <div class="border-b-2 border-gray-800 pb-3 mb-4">
+        <h1 class="text-xl font-bold text-center mb-3">博格平衡量表 (Berg Balance Scale, BBS) 評估表</h1>
+        <div class="grid grid-cols-4 gap-4 text-xs">
+            <div class="flex">姓名：<span class="border-b border-gray-400 flex-1"></span></div>
+            <div class="flex">日期：<span class="border-b border-gray-400 flex-1"></span></div>
+            <div class="flex">ID：<span class="border-b border-gray-400 flex-1"></span></div>
+            <div class="flex">評估者：<span class="border-b border-gray-400 flex-1"></span></div>
+        </div>
+    </div>
+
+    <!-- Rating Table -->
+    <form id="bbsForm">
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-300 p-2 text-left w-2/3">評估項目任務</th>
+                    <th class="border border-gray-300 p-2 text-center w-12">0</th>
+                    <th class="border border-gray-300 p-2 text-center w-12">1</th>
+                    <th class="border border-gray-300 p-2 text-center w-12">2</th>
+                    <th class="border border-gray-300 p-2 text-center w-12">3</th>
+                    <th class="border border-gray-300 p-2 text-center w-12">4</th>
+                </tr>
+            </thead>
+            <tbody id="questions-body">
+                <!-- 由 JavaScript 動態生成 -->
+            </tbody>
+        </table>
+    </form>
+
+    <!-- Score Summary & Interpretation -->
+    <div class="mt-4 flex justify-between items-end border-t-2 border-gray-800 pt-2">
+        <div>
+            <div class="text-lg font-bold">總分：<span id="totalDisplay" class="text-blue-700 underline decoration-double">0</span> / 56</div>
+            <div class="text-[10px] text-gray-500 mt-1">
+                評分參考：41-56: 獨立活動 | 21-40: 需輔具 | 0-20: 需輪椅輔助
+            </div>
+        </div>
+        <div class="text-[10px] italic text-gray-400">
+            Berg Balance Scale (BBS) 繁體中文版
+        </div>
+    </div>
+
+    <!-- Reference Section (Optional to print, useful for quick checks) -->
+    <div class="mt-6 pt-4 border-t border-dashed border-gray-200">
+        <h4 class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">快速評分準則參考</h4>
+        <div id="reference-list" class="grid grid-cols-2 gap-x-8 gap-y-1 text-[9px] text-gray-400 leading-tight">
+            <!-- 由 JavaScript 動態生成 -->
+        </div>
+    </div>
+</div>
+
+<!-- 螢幕專用浮動操作列 (列印時會自動隱藏) -->
+<div class="sticky-score no-print">
+    <div class="flex flex-col">
+        <span class="text-[10px] opacity-80">CURRENT SCORE</span>
+        <span class="text-xl">總分：<span id="floatingScore">0</span></span>
+    </div>
+    <div class="h-8 w-px bg-white/20"></div>
+    <button onclick="window.print()" class="bg-white text-blue-900 px-5 py-2 rounded-full hover:bg-blue-50 transition-all active:scale-95 shadow-sm font-bold flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        產出 PDF / 列印
+    </button>
+</div>
+
+<script>
+    const data = [
+        { id: 1, title: "1. 從坐位站起 (Sitting to Standing)", ref: "4:不需手支撐獨自站穩 / 0:需中度或大量幫助" },
+        { id: 2, title: "2. 獨立站立 (Standing Unsupported)", ref: "4:安全站立2分鐘 / 0:無助無法站30秒" },
+        { id: 3, title: "3. 獨立坐位 (Sitting Unsupported)", ref: "4:不靠背坐2分鐘 / 0:無支撐不滿10秒" },
+        { id: 4, title: "4. 從站位坐下 (Standing to Sitting)", ref: "4:安全控速/極少用手 / 0:需要協助" },
+        { id: 5, title: "5. 轉移 (Transfers)", ref: "4:安全轉移/極少用手 / 0:需要二人協助" },
+        { id: 6, title: "6. 閉眼站立 (Standing with Eyes Closed)", ref: "4:安全10秒 / 0:需幫助以防跌倒" },
+        { id: 7, title: "7. 雙腳併攏站立 (Feet Together)", ref: "4:獨立併攏1分鐘 / 0:需要幫助且未滿15秒" },
+        { id: 8, title: "8. 站立前伸手 (Reaching Forward)", ref: "4:>25公分 / 0:嘗試時失去平衡" },
+        { id: 9, title: "9. 從地面撿拾物品 (Retrieving Object)", ref: "4:安全容易撿起 / 0:無法嘗試/失衡" },
+        { id: 10, title: "10. 轉身向後看 (Turning Behind)", ref: "4:兩側向後看/重心佳 / 0:需協助防跌" },
+        { id: 11, title: "11. 360 度旋轉 (Turning 360 Degrees)", ref: "4:4秒內安全一圈 / 0:旋轉時需要協助" },
+        { id: 12, title: "12. 雙腳交替踏台 (Alternate Foot on Stool)", ref: "4:20秒內完成8步 / 0:需協助防跌" },
+        { id: 13, title: "13. 剪刀腳站立 (Tandem Standing)", ref: "4:獨立併腳維持30秒 / 0:嘗試時失去平衡" },
+        { id: 14, title: "14. 單腳站立 (Standing on One Leg)", ref: "4:獨立抬腿大於10秒 / 0:無法嘗試/需協助" }
+    ];
+
+    const tableBody = document.getElementById('questions-body');
+    const refList = document.getElementById('reference-list');
+
+    data.forEach(item => {
+        // 生成表格列
+        const row = document.createElement('tr');
+        row.className = 'item-row';
+        
+        let rowHtml = `<td class="border border-gray-300 p-2 font-medium">${item.title}</td>`;
+        for (let i = 0; i <= 4; i++) {
+            rowHtml += `
+                <td class="border border-gray-300 p-2 text-center">
+                    <input type="radio" name="q${item.id}" value="${i}" onchange="updateTotal()">
+                </td>`;
+        }
+        row.innerHTML = rowHtml;
+        tableBody.appendChild(row);
+
+        // 生成底部參考
+        const refItem = document.createElement('div');
+        refItem.innerHTML = `<span class="font-bold text-gray-500">${item.id}.</span> ${item.ref}`;
+        refList.appendChild(refItem);
+    });
+
+    function updateTotal() {
+        let total = 0;
+        const form = document.getElementById('bbsForm');
+        const formData = new FormData(form);
+        for (let value of formData.values()) {
+            total += parseInt(value);
+        }
+        document.getElementById('totalDisplay').innerText = total;
+        document.getElementById('floatingScore').innerText = total;
+    }
+</script>
+
+</body>
+</html>
