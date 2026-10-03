@@ -93,6 +93,13 @@
             cursor: pointer;
         }
 
+        /* 標籤按鈕切換 */
+        .side-tab-btn.active {
+            background-color: #1e40af;
+            color: #ffffff;
+            border-color: #1e40af;
+        }
+
         /* 自定義彈出 Toast 提示框 */
         #toast {
             visibility: hidden;
@@ -133,33 +140,64 @@
         </div>
         <h1 class="text-xl font-bold text-center text-slate-900 tracking-tight">腳踝理學檢查評估表暨臨床智能鑑別診斷系統</h1>
         
-        <!-- 病歷資訊欄位 -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mt-3 bg-slate-50 p-2.5 rounded border border-slate-200">
-            <div class="flex items-center">
-                <span class="text-slate-600 font-medium">個案姓名：</span>
-                <input type="text" id="patientName" placeholder="點此輸入" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1">
+        <!-- 病歷資訊欄位：分兩行排列 -->
+        <div class="space-y-2 mt-3 bg-slate-50 p-3 rounded border border-slate-200 text-xs">
+            <!-- 第一行：姓名與日期 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="flex items-center">
+                    <span class="text-slate-700 font-semibold w-20">個案姓名：</span>
+                    <input type="text" id="patientName" placeholder="點此輸入姓名" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1">
+                </div>
+                <div class="flex items-center">
+                    <span class="text-slate-700 font-semibold w-20">評估日期：</span>
+                    <input type="date" id="evalDate" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1 text-xs">
+                </div>
             </div>
-            <div class="flex items-center">
-                <span class="text-slate-600 font-medium">評估日期：</span>
-                <input type="date" id="evalDate" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1 text-xs">
-            </div>
-            <div class="flex items-center">
-                <span class="text-slate-600 font-medium">患側腳踝：</span>
-                <select id="affectedSide" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1 font-semibold text-blue-800" onchange="runEvaluation()">
-                    <option value="右踝 (Right)">右踝 (Right)</option>
-                    <option value="左踝 (Left)">左踝 (Left)</option>
-                    <option value="雙踝 (Bilateral)">雙側踝</option>
-                </select>
-            </div>
-            <div class="flex items-center">
-                <span class="text-slate-600 font-medium">受傷病程：</span>
-                <select id="injuryPhase" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1" onchange="runEvaluation()">
-                    <option value="急性期 (< 7天)">急性期 (&lt; 7天)</option>
-                    <option value="亞急性期 (1-3週)">亞急性期 (1-3週)</option>
-                    <option value="慢性期 (> 3週)">慢性期 (&gt; 3週)</option>
-                </select>
+            <!-- 第二行：患側與病程 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div class="flex items-center">
+                    <span class="text-slate-700 font-semibold w-20">患側腳踝：</span>
+                    <select id="affectedSide" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1 font-semibold text-blue-800" onchange="handleSideChange()">
+                        <option value="right">右踝 (Right Ankle)</option>
+                        <option value="left">左踝 (Left Ankle)</option>
+                        <option value="bilateral">雙踝 (Bilateral - 雙側分開評估)</option>
+                    </select>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-slate-700 font-semibold w-20">受傷病程：</span>
+                    <select id="injuryPhase" class="border-b border-slate-400 bg-transparent flex-1 focus:outline-none focus:border-blue-600 px-1" onchange="runEvaluation()">
+                        <option value="急性期 (< 7天)">急性期 (&lt; 7天)</option>
+                        <option value="亞急性期 (1-3週)">亞急性期 (1-3週)</option>
+                        <option value="慢性期 (> 3週)">慢性期 (&gt; 3週)</option>
+                    </select>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- 雙側模式切換分頁標籤 (當選擇雙踝時顯示) -->
+    <div id="bilateralTabContainer" class="hidden mb-3 bg-blue-50 border border-blue-200 rounded p-1.5 flex items-center justify-between no-print">
+        <div class="flex items-center gap-1.5 text-xs text-blue-900 font-bold">
+            <span>雙側評估中：</span>
+            <span class="text-[11px] font-normal text-blue-700">可切換兩側進行填寫與判讀</span>
+        </div>
+        <div class="flex gap-2 text-xs">
+            <button type="button" id="tabBtnRight" onclick="switchSideView('right')" class="side-tab-btn active px-3 py-1 rounded border border-slate-300 font-medium transition">
+                👉 填寫右踝 (Right)
+            </button>
+            <button type="button" id="tabBtnLeft" onclick="switchSideView('left')" class="side-tab-btn px-3 py-1 rounded border border-slate-300 bg-white text-slate-700 font-medium transition">
+                👈 填寫左踝 (Left)
+            </button>
+        </div>
+    </div>
+
+    <!-- 當前評估側提示徽章 -->
+    <div id="currentActiveSideBadge" class="mb-3 flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded border border-slate-200 text-xs">
+        <span class="font-bold text-slate-800 flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>
+            目前評估側：<span id="activeSideLabel" class="text-blue-700 font-extrabold text-sm">右踝 (Right)</span>
+        </span>
+        <span class="text-[11px] text-slate-500">所有勾選將記錄於該側獨立檔案中</span>
     </div>
 
     <!-- 紅旗徵兆警訊 (Ottawa Ankle Rules) -->
@@ -196,17 +234,17 @@
         <div class="flex items-center justify-between bg-slate-800 text-white px-3 py-1.5 rounded-t text-xs font-bold">
             <div class="flex items-center gap-2">
                 <span class="bg-blue-500 text-[10px] px-1.5 py-0.2 rounded font-mono">STEP 1</span>
-                <span>主動活動 AROM（動作由受試者自行出自主收縮動作，評估疼痛與受限）</span>
+                <span>主動活動 AROM（自主出力動作，評估收縮/非收縮性共同影響）</span>
             </div>
-            <span class="text-[10px] font-normal text-slate-300">同受收縮性與非收縮性影響</span>
+            <span class="text-[10px] font-normal text-slate-300">含關節正常度數參考</span>
         </div>
         <table class="w-full border-collapse border border-slate-300 text-xs">
             <thead>
                 <tr class="bg-slate-100 text-slate-700">
-                    <th class="border border-slate-300 p-1.5 text-left w-36">測試動作方向</th>
-                    <th class="border border-slate-300 p-1.5 text-center w-28">檢測表現</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-40">測試動作名稱</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-28 pl-3">檢測表現</th>
                     <th class="border border-slate-300 p-1.5 text-left">疼痛部位 / 臨床表徵勾選</th>
-                    <th class="border border-slate-300 p-1.5 text-center w-24">活動度 (ROM)</th>
+                    <th class="border border-slate-300 p-1.5 text-center w-28">活動度 (ROM)</th>
                 </tr>
             </thead>
             <tbody id="arom-table-body">
@@ -220,15 +258,15 @@
         <div class="flex items-center justify-between bg-teal-800 text-white px-3 py-1.5 rounded-t text-xs font-bold">
             <div class="flex items-center gap-2">
                 <span class="bg-teal-500 text-[10px] px-1.5 py-0.2 rounded font-mono">STEP 2</span>
-                <span>被動活動 PROM（由施測者輕柔帶動放鬆關節，評估組織拉長痛、受限與擠壓）</span>
+                <span>被動活動 PROM（施測者放鬆帶動，主要鑑別韌帶、關節囊或拮抗肌拉長痛）</span>
             </div>
-            <span class="text-[10px] font-normal text-teal-200">主要鑑別：非收縮性組織 (韌帶/關節囊) 或 拮抗肌伸展拉長痛</span>
+            <span class="text-[10px] font-normal text-teal-200">非收縮性病灶鑑別</span>
         </div>
         <table class="w-full border-collapse border border-slate-300 text-xs">
             <thead>
                 <tr class="bg-slate-100 text-slate-700">
-                    <th class="border border-slate-300 p-1.5 text-left w-36">被動活動測試</th>
-                    <th class="border border-slate-300 p-1.5 text-center w-28">檢測表現</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-40">被動活動名稱</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-28 pl-3">檢測表現</th>
                     <th class="border border-slate-300 p-1.5 text-left">疼痛出現位置 / 牽張感受</th>
                     <th class="border border-slate-300 p-1.5 text-center w-28">終末感 (End-feel)</th>
                 </tr>
@@ -244,17 +282,17 @@
         <div class="flex items-center justify-between bg-indigo-900 text-white px-3 py-1.5 rounded-t text-xs font-bold">
             <div class="flex items-center gap-2">
                 <span class="bg-indigo-500 text-[10px] px-1.5 py-0.2 rounded font-mono">STEP 3</span>
-                <span>等長阻力測試 RIM（在關節中立位對抗最大阻力，不產生關節角度位移）</span>
+                <span>等長阻力測試 RIM（關節中立位對抗阻力，核心鑑別收縮性組織）</span>
             </div>
-            <span class="text-[10px] font-normal text-indigo-200">核心鑑別：收縮性組織 (肌腹、肌腱、肌腱骨膜處)</span>
+            <span class="text-[10px] font-normal text-indigo-200">肌腱/肌腹專一性</span>
         </div>
         <table class="w-full border-collapse border border-slate-300 text-xs">
             <thead>
                 <tr class="bg-slate-100 text-slate-700">
-                    <th class="border border-slate-300 p-1.5 text-left w-36">抗阻測試方向</th>
-                    <th class="border border-slate-300 p-1.5 text-center w-32">疼痛反應</th>
-                    <th class="border border-slate-300 p-1.5 text-center w-32">肌力表現 (Strength)</th>
-                    <th class="border border-slate-300 p-1.5 text-left">誘發之確切疼痛解剖位置</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-40">抗阻測試名稱</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-28 pl-3">疼痛反應</th>
+                    <th class="border border-slate-300 p-1.5 text-left w-28 pl-3">肌力表現</th>
+                    <th class="border border-slate-300 p-1.5 text-left">誘發之確切解剖位置</th>
                 </tr>
             </thead>
             <tbody id="rim-table-body">
@@ -263,18 +301,18 @@
         </table>
     </div>
 
-    <!-- 四、診斷與臨床就醫判讀報告區 (重點整合與就醫建議) -->
+    <!-- 四、診斷與臨床就醫判讀報告區 (SOAP 醫療專用格式) -->
     <div class="border-2 border-blue-900 rounded-lg overflow-hidden bg-white shadow-sm mt-3">
         <div class="bg-blue-900 text-white px-4 py-2 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                <h3 class="font-bold text-sm tracking-wide">STTT 交叉比對推論報告與就醫指導</h3>
+                <h3 class="font-bold text-sm tracking-wide">STTT 理學鑑別診斷推論報告 (SOAP 格式)</h3>
             </div>
             <span id="diagnosticStatusBadge" class="bg-blue-800 text-[11px] px-2 py-0.5 rounded text-blue-200 border border-blue-700">等待勾選評估項目</span>
         </div>
 
         <div class="p-3.5 space-y-3 text-xs">
-            <!-- 優先懷疑受傷組織 -->
+            <!-- 優先懷疑受傷組織與分類卡片 -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div class="md:col-span-2 bg-slate-50 border border-slate-200 rounded p-3">
                     <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
@@ -308,32 +346,40 @@
                 </div>
             </div>
 
-            <!-- 就醫科別與處置指引 -->
+            <!-- 就醫科別與處置指引 + 醫師專用 SOAP 摘要 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                <div class="border border-indigo-100 bg-indigo-50/50 rounded p-2.5">
-                    <div class="font-bold text-indigo-950 flex items-center gap-1.5 mb-1">
-                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                        建議就醫科別與後續檢查建議
+                <div class="border border-indigo-100 bg-indigo-50/50 rounded p-2.5 flex flex-col justify-between">
+                    <div>
+                        <div class="font-bold text-indigo-950 flex items-center gap-1.5 mb-1">
+                            <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            建議就醫科別與後續檢查建議
+                        </div>
+                        <div id="recommendedDepartment" class="text-xs text-indigo-900 leading-relaxed">
+                            建議至 <strong class="text-indigo-950">復健科 (物理醫學與復健科)</strong> 或 <strong class="text-indigo-950">骨科 / 運動醫學科</strong> 門診就診。
+                        </div>
+                        <div id="recommendedExams" class="text-[11px] text-indigo-700 mt-1.5">
+                            💡 臨床檢查參考：骨骼肌肉超音波 (Musculoskeletal Ultrasound) 評估肌腱韌帶撕裂或積液；若劇烈鈍痛無法承重請照 X 光排除骨折。
+                        </div>
                     </div>
-                    <div id="recommendedDepartment" class="text-xs text-indigo-900 leading-relaxed">
-                        建議至 <strong class="text-indigo-950">復健科 (物理醫學與復健科)</strong> 或 <strong class="text-indigo-950">骨科 / 運動醫學科</strong> 門診就診。
-                    </div>
-                    <div id="recommendedExams" class="text-[11px] text-indigo-700 mt-1">
-                        💡 臨床檢查參考：骨骼肌肉超音波 (Musculoskeletal Ultrasound) 評估肌腱韌帶撕裂或積液；若劇烈鈍痛無法承重請照 X 光排除骨折。
+                    <div class="mt-2 pt-2 border-t border-indigo-200 text-[10px] text-indigo-600">
+                        提醒：理學檢查為初步評估工具，確切診斷請由現場專業醫師親診影像為準。
                     </div>
                 </div>
 
                 <div class="border border-emerald-100 bg-emerald-50/50 rounded p-2.5">
-                    <div class="font-bold text-emerald-950 flex items-center gap-1.5 mb-1">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                        就醫看診「醫師速讀病況摘要」(SBAR 溝通)
+                    <div class="font-bold text-emerald-950 flex items-center justify-between mb-1">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            就醫看診「醫師病歷摘要 (SOAP)」
+                        </span>
+                        <span class="text-[10px] font-normal text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">醫療交班標準格式</span>
                     </div>
-                    <div id="doctorSummaryBox" class="bg-white p-2 rounded border border-emerald-200 text-[11px] text-slate-700 font-mono select-all leading-normal">
-                        尚未填寫測試數據。勾選完成後此處將自動產生摘要，方便向診所或醫院醫師陳述。
+                    <div id="doctorSummaryBox" class="bg-white p-2 rounded border border-emerald-200 text-[11px] text-slate-700 font-mono select-all leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                        尚未填寫測試數據。勾選完成後此處將自動產生完整的 SOAP 病歷摘要。
                     </div>
                     <div class="flex justify-end mt-1.5">
-                        <button onclick="copySummary()" type="button" class="text-[10px] text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded font-semibold transition active:scale-95">
-                            📋 複製此段摘要帶去診所
+                        <button onclick="copySummary()" type="button" class="text-[10px] text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded font-semibold transition active:scale-95 flex items-center gap-1">
+                            📋 複製 SOAP 病歷摘要帶去診所
                         </button>
                     </div>
                 </div>
@@ -341,15 +387,45 @@
         </div>
     </div>
 
-    <!-- 底部參考規範對照 (印出時亦清晰簡潔) -->
-    <div class="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-500 leading-normal flex justify-between items-end">
+    <!-- 底部：踝關節正常 ROM 參考標準卡 (如同 BBS 快速評分準則) -->
+    <div class="mt-4 pt-3 border-t border-slate-200 text-[11px] text-slate-600">
+        <h4 class="font-bold text-slate-800 text-xs mb-1.5 flex items-center gap-1.5">
+            <span class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded">REFERENCE</span>
+            踝關節正常活動度 (Normal Range of Motion, ROM) 與解剖參考
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2 rounded border border-slate-200 text-xs">
+            <div class="border-l-2 border-blue-500 pl-2">
+                <div class="font-bold text-slate-800">背屈 (Dorsiflexion)</div>
+                <div class="text-blue-700 font-semibold font-mono text-[11px]">正常：0° ～ 20°</div>
+                <div class="text-[10px] text-slate-500">主動肌：脛前肌、伸趾長肌</div>
+            </div>
+            <div class="border-l-2 border-blue-500 pl-2">
+                <div class="font-bold text-slate-800">蹠屈 (Plantarflexion)</div>
+                <div class="text-blue-700 font-semibold font-mono text-[11px]">正常：0° ～ 50°</div>
+                <div class="text-[10px] text-slate-500">主動肌：腓腸肌、比目魚肌</div>
+            </div>
+            <div class="border-l-2 border-teal-500 pl-2">
+                <div class="font-bold text-slate-800">內翻 (Inversion)</div>
+                <div class="text-teal-700 font-semibold font-mono text-[11px]">正常：0° ～ 35°</div>
+                <div class="text-[10px] text-slate-500">距下關節內旋/牽拉 ATFL、CFL</div>
+            </div>
+            <div class="border-l-2 border-teal-500 pl-2">
+                <div class="font-bold text-slate-800">外翻 (Eversion)</div>
+                <div class="text-teal-700 font-semibold font-mono text-[11px]">正常：0° ～ 15°–20°</div>
+                <div class="text-[10px] text-slate-500">主動肌：腓骨長肌、腓骨短肌</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部參考規範對照 (印出時清晰簡潔) -->
+    <div class="mt-3 pt-2 border-t border-slate-200 text-[10px] text-slate-500 leading-normal flex justify-between items-end">
         <div>
-            <div class="font-semibold text-slate-600">STTT 快速判別原則：</div>
+            <div class="font-semibold text-slate-600">STTT 快速交叉判別核心原則：</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 mt-0.5">
-                <div>• 抗阻同向痛＋被動反向拉長痛 ➔ 收縮性組織 (肌腱/肌腹)</div>
+                <div>• 抗阻同向痛＋被動反向拉長痛 ➔ 收縮性組織 (肌腱/肌腹病變)</div>
                 <div>• 主動被動同方向在關節痛＋抗阻不痛 ➔ 非收縮性組織 (關節囊/夾擠)</div>
                 <div>• 被動牽拉反轉疼痛＋抗阻不痛 ➔ 韌帶損傷 (如 ATFL、CFL、三角韌帶)</div>
-                <div>• 抗阻有痛且無力 ➔ 肌肉/肌腱較嚴重撕裂傷或神經抑制</div>
+                <div>• 抗阻有痛且無力 ➔ 肌肉/肌腱撕裂傷或神經抑制</div>
             </div>
         </div>
         <div class="text-right text-slate-400">
@@ -409,12 +485,51 @@
     // 預設日期為今日
     document.getElementById('evalDate').value = new Date().toISOString().split('T')[0];
 
-    // AROM 項目資料
+    // 當前操作側 (right 或 left)
+    let currentSide = 'right';
+
+    // 雙側儲存狀態架構
+    const state = {
+        right: initSideData(),
+        left: initSideData()
+    };
+
+    function initSideData() {
+        return {
+            rf_wb: false,
+            rf_lat: false,
+            rf_med: false,
+            rf_nav: false,
+            arom: {
+                arom_df: { status: 'normal', locations: [], rom: 'full' },
+                arom_pf: { status: 'normal', locations: [], rom: 'full' },
+                arom_inv: { status: 'normal', locations: [], rom: 'full' },
+                arom_ev: { status: 'normal', locations: [], rom: 'full' }
+            },
+            prom: {
+                prom_df: { status: 'normal', locations: [], endfeel: 'normal' },
+                prom_pf: { status: 'normal', locations: [], endfeel: 'normal' },
+                prom_inv: { status: 'normal', locations: [], endfeel: 'normal' },
+                prom_ev: { status: 'normal', locations: [], endfeel: 'normal' },
+                prom_pf_inv: { status: 'normal', locations: [], endfeel: 'normal' }
+            },
+            rim: {
+                rim_df: { pain: 'no', strength: 'strong', loc_custom: '' },
+                rim_pf: { pain: 'no', strength: 'strong', loc_custom: '' },
+                rim_inv: { pain: 'no', strength: 'strong', loc_custom: '' },
+                rim_ev: { pain: 'no', strength: 'strong', loc_custom: '' }
+            }
+        };
+    }
+
+    // AROM 項目資料（含正常角度與分兩行測試名稱）
     const aromData = [
         {
             id: 'arom_df',
-            name: '背屈 (Dorsiflexion)',
-            hint: '翹起腳尖朝向小腿',
+            nameZh: '背屈活動',
+            nameEn: 'Dorsiflexion (DF)',
+            romRef: '正常: 0°~20°',
+            hint: '腳尖向上翹起朝向小腿',
             locations: [
                 { val: 'anterior', label: '前踝關節前方 (擠壓感)' },
                 { val: 'posterior', label: '小腿後側 / 阿基里斯腱 (拉扯感)' },
@@ -423,8 +538,10 @@
         },
         {
             id: 'arom_pf',
-            name: '蹠屈 (Plantarflexion)',
-            hint: '腳尖用力往下踩 / 類似墊腳',
+            nameZh: '蹠屈活動',
+            nameEn: 'Plantarflexion (PF)',
+            romRef: '正常: 0°~50°',
+            hint: '腳尖用力往下踩 / 踮腳動作',
             locations: [
                 { val: 'posterior', label: '後踝 / 跟骨後上方 (夾擠或後側收縮)' },
                 { val: 'achilles', label: '阿基里斯腱 / 小腿腓腸肌比目魚肌' },
@@ -433,8 +550,10 @@
         },
         {
             id: 'arom_inv',
-            name: '內翻 (Inversion)',
-            hint: '腳掌底心轉向內側',
+            nameZh: '內翻活動',
+            nameEn: 'Inversion (Inv)',
+            romRef: '正常: 0°~35°',
+            hint: '腳掌底心朝向內側旋轉',
             locations: [
                 { val: 'lateral', label: '外踝前下方 (牽拉外側韌帶)' },
                 { val: 'medial', label: '內踝後側 / 舟狀骨 (脛後肌收縮)' },
@@ -443,8 +562,10 @@
         },
         {
             id: 'arom_ev',
-            name: '外翻 (Eversion)',
-            hint: '腳掌底心轉向外側',
+            nameZh: '外翻活動',
+            nameEn: 'Eversion (Ev)',
+            romRef: '正常: 0°~15°-20°',
+            hint: '腳掌底心朝向外側旋轉',
             locations: [
                 { val: 'peroneal', label: '外踝後方 / 腓骨肌走行處 (收縮痛)' },
                 { val: 'medial_lig', label: '內踝下方三角韌帶區 (牽拉感)' },
@@ -457,8 +578,10 @@
     const promData = [
         {
             id: 'prom_df',
-            name: '被動背屈 (PROM Dorsiflexion)',
-            hint: '檢查者將腳掌往上推到底',
+            nameZh: '被動背屈牽伸',
+            nameEn: 'PROM Dorsiflexion',
+            romRef: '正常: 0°~20° (彈性阻抗)',
+            hint: '檢查者手動將腳掌推向背屈底',
             locations: [
                 { val: 'post_stretch', label: '後側拉長痛：阿基里斯腱 / 小腿肌群' },
                 { val: 'ant_pinch', label: '前踝擠壓痛：前踝關節囊 / 骨刺夾擠' },
@@ -467,8 +590,10 @@
         },
         {
             id: 'prom_pf',
-            name: '被動蹠屈 (PROM Plantarflexion)',
-            hint: '檢查者將腳掌往下壓到底',
+            nameZh: '被動蹠屈牽伸',
+            nameEn: 'PROM Plantarflexion',
+            romRef: '正常: 0°~50° (組織彈性阻抗)',
+            hint: '檢查者手動將腳掌壓向蹠屈底',
             locations: [
                 { val: 'ant_stretch', label: '前側拉長痛：脛前肌腱 / 前關節囊' },
                 { val: 'post_pinch', label: '後踝擠壓痛：距骨後突 / 關節後夾擠' },
@@ -477,8 +602,10 @@
         },
         {
             id: 'prom_inv',
-            name: '被動內翻 (PROM Inversion)',
-            hint: '將足底向內旋，拉長外側組織',
+            nameZh: '被動內翻牽伸',
+            nameEn: 'PROM Inversion',
+            romRef: '正常: 0°~35°',
+            hint: '手動將足底向內旋，拉張外側韌帶',
             locations: [
                 { val: 'cfl_atfl', label: '外踝下方 / 前下方痛 (拉張外側韌帶 CFL/ATFL)' },
                 { val: 'peroneal_stretch', label: '外踝後方拉長痛 (腓骨長短肌腱牽張)' },
@@ -487,8 +614,10 @@
         },
         {
             id: 'prom_ev',
-            name: '被動外翻 (PROM Eversion)',
-            hint: '將足底向外旋，拉長內側韌帶',
+            nameZh: '被動外翻牽伸',
+            nameEn: 'PROM Eversion',
+            romRef: '正常: 0°~15°-20°',
+            hint: '手動將足底向外旋，拉張內側韌帶',
             locations: [
                 { val: 'deltoid', label: '內踝下方痛 (三角韌帶 Deltoid Ligament 牽張)' },
                 { val: 'lat_joint', label: '外側關節面擠壓痛' },
@@ -497,8 +626,10 @@
         },
         {
             id: 'prom_pf_inv',
-            name: '被動蹠屈＋內翻 (Special Stress)',
-            hint: '最敏感張力測試：最大化前距腓韌帶 ATFL 張力',
+            nameZh: '被動蹠屈＋內翻應力',
+            nameEn: 'Special Stress Test',
+            romRef: 'ATFL 最大拉張應力',
+            hint: '敏感測試：最大化前距腓韌帶張力',
             locations: [
                 { val: 'atfl_stress', label: '外踝前下方劇痛 (ATFL 典型張力疼痛)' },
                 { val: 'normal', label: '無特殊劇烈疼痛' }
@@ -510,49 +641,55 @@
     const rimData = [
         {
             id: 'rim_df',
-            name: '抗阻背屈 (Resisted DF)',
+            nameZh: '等長抗阻背屈',
+            nameEn: 'Resisted Dorsiflexion',
             target: '脛前肌、伸拇長肌、伸趾長肌',
             defaultLoc: '前踝中央或脛骨外側肌腹'
         },
         {
             id: 'rim_pf',
-            name: '抗阻蹠屈 (Resisted PF)',
+            nameZh: '等長抗阻蹠屈',
+            nameEn: 'Resisted Plantarflexion',
             target: '腓腸肌、比目魚肌、阿基里斯腱',
             defaultLoc: '小腿肚、跟腱或跟骨後附著點'
         },
         {
             id: 'rim_inv',
-            name: '抗阻內翻 (Resisted Inv)',
+            nameZh: '等長抗阻內翻',
+            nameEn: 'Resisted Inversion',
             target: '脛後肌 (蹠屈位)、脛前肌 (背屈位)',
             defaultLoc: '內踝後方沿舟狀骨 (脛後) 或 前踝內側 (脛前)'
         },
         {
             id: 'rim_ev',
-            name: '抗阻外翻 (Resisted Ev)',
+            nameZh: '等長抗阻外翻',
+            nameEn: 'Resisted Eversion',
             target: '腓骨長肌、腓骨短肌',
             defaultLoc: '外踝正後方、外踝下彎處或第5蹠骨粗隆'
         }
     ];
 
-    // 渲染 AROM 表格
+    // 渲染 AROM 表格（測試名稱分兩行、檢測表現不換行分兩段）
     const aromTbody = document.getElementById('arom-table-body');
     aromData.forEach((item, index) => {
         const tr = document.createElement('tr');
         tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
         tr.innerHTML = `
             <td class="border border-slate-300 p-2 font-medium">
-                <div class="text-slate-900 font-bold">${item.name}</div>
-                <div class="text-[10px] text-slate-500">${item.hint}</div>
+                <div class="text-slate-900 font-bold leading-tight">${item.nameZh}</div>
+                <div class="text-[10px] text-blue-700 font-mono mt-0.5">${item.nameEn}</div>
+                <div class="text-[10px] text-slate-400 font-mono">(${item.romRef})</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">${item.hint}</div>
             </td>
-            <td class="border border-slate-300 p-2 text-center">
-                <div class="flex justify-center gap-2">
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_status" value="normal" checked class="custom-radio" onchange="runEvaluation()">
-                        <span>無痛</span>
+            <td class="border border-slate-300 p-2 text-left whitespace-nowrap pl-3">
+                <div class="flex flex-col gap-1 items-start justify-center">
+                    <label class="flex items-center gap-1.5 cursor-pointer text-slate-700">
+                        <input type="radio" name="${item.id}_status" value="normal" checked class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>無痛 (Normal)</span>
                     </label>
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_status" value="pain" class="custom-radio" onchange="runEvaluation()">
-                        <span class="text-rose-600 font-bold">疼痛</span>
+                    <label class="flex items-center gap-1.5 cursor-pointer text-rose-600 font-bold">
+                        <input type="radio" name="${item.id}_status" value="pain" class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>疼痛 (Pain)</span>
                     </label>
                 </div>
             </td>
@@ -560,17 +697,17 @@
                 <div class="flex flex-wrap gap-2 text-[11px]">
                     ${item.locations.map(loc => `
                         <label class="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-200 hover:bg-blue-50 cursor-pointer">
-                            <input type="checkbox" name="${item.id}_loc" value="${loc.val}" class="custom-radio rounded text-blue-600" onchange="runEvaluation()">
+                            <input type="checkbox" name="${item.id}_loc" value="${loc.val}" class="custom-radio rounded text-blue-600" onchange="syncCurrentFormToState(); runEvaluation();">
                             <span class="text-slate-700">${loc.label}</span>
                         </label>
                     `).join('')}
                 </div>
             </td>
             <td class="border border-slate-300 p-2 text-center">
-                <select name="${item.id}_rom" class="border border-slate-300 rounded px-1.5 py-0.5 text-[11px] bg-white w-full" onchange="runEvaluation()">
-                    <option value="full">正常角度</option>
-                    <option value="limited_mild">輕度受限</option>
-                    <option value="limited_severe">明顯受限/僵硬</option>
+                <select name="${item.id}_rom" class="border border-slate-300 rounded px-1.5 py-1 text-[11px] bg-white w-full" onchange="syncCurrentFormToState(); runEvaluation();">
+                    <option value="full">正常角度 (${item.romRef.replace('正常: ', '')})</option>
+                    <option value="limited_mild">輕度受限 (減少 &lt; 10°)</option>
+                    <option value="limited_severe">明顯受限 / 僵硬</option>
                 </select>
             </td>
         `;
@@ -584,18 +721,20 @@
         tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
         tr.innerHTML = `
             <td class="border border-slate-300 p-2 font-medium">
-                <div class="text-slate-900 font-bold">${item.name}</div>
-                <div class="text-[10px] text-teal-700">${item.hint}</div>
+                <div class="text-slate-900 font-bold leading-tight">${item.nameZh}</div>
+                <div class="text-[10px] text-teal-700 font-mono mt-0.5">${item.nameEn}</div>
+                <div class="text-[10px] text-slate-400 font-mono">(${item.romRef})</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">${item.hint}</div>
             </td>
-            <td class="border border-slate-300 p-2 text-center">
-                <div class="flex justify-center gap-2">
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_status" value="normal" checked class="custom-radio" onchange="runEvaluation()">
-                        <span>正常</span>
+            <td class="border border-slate-300 p-2 text-left whitespace-nowrap pl-3">
+                <div class="flex flex-col gap-1 items-start justify-center">
+                    <label class="flex items-center gap-1.5 cursor-pointer text-slate-700">
+                        <input type="radio" name="${item.id}_status" value="normal" checked class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>正常 (Normal)</span>
                     </label>
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_status" value="pain" class="custom-radio" onchange="runEvaluation()">
-                        <span class="text-teal-700 font-bold">陽性/痛</span>
+                    <label class="flex items-center gap-1.5 cursor-pointer text-teal-700 font-bold">
+                        <input type="radio" name="${item.id}_status" value="pain" class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>陽性/痛 (Pain)</span>
                     </label>
                 </div>
             </td>
@@ -603,18 +742,18 @@
                 <div class="flex flex-wrap gap-2 text-[11px]">
                     ${item.locations.map(loc => `
                         <label class="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-200 hover:bg-teal-50 cursor-pointer">
-                            <input type="checkbox" name="${item.id}_loc" value="${loc.val}" class="custom-radio rounded text-teal-600" onchange="runEvaluation()">
+                            <input type="checkbox" name="${item.id}_loc" value="${loc.val}" class="custom-radio rounded text-teal-600" onchange="syncCurrentFormToState(); runEvaluation();">
                             <span class="text-slate-700">${loc.label}</span>
                         </label>
                     `).join('')}
                 </div>
             </td>
             <td class="border border-slate-300 p-2 text-center">
-                <select name="${item.id}_endfeel" class="border border-slate-300 rounded px-1 py-0.5 text-[11px] bg-white w-full" onchange="runEvaluation()">
-                    <option value="normal">生理正常終末感</option>
-                    <option value="empty">空虛感 (劇痛不敢動)</option>
-                    <option value="spasm">肌肉痙攣 (Spasm)</option>
-                    <option value="hard_capsular">關節囊或骨性堅硬</option>
+                <select name="${item.id}_endfeel" class="border border-slate-300 rounded px-1 py-1 text-[11px] bg-white w-full" onchange="syncCurrentFormToState(); runEvaluation();">
+                    <option value="normal">生理正常組織彈性質感</option>
+                    <option value="empty">空虛感 (劇痛不敢動 Empty)</option>
+                    <option value="spasm">肌肉痙攣保護 (Spasm)</option>
+                    <option value="hard_capsular">骨性撞擊 / 關節囊堅硬卡住</option>
                 </select>
             </td>
         `;
@@ -628,128 +767,237 @@
         tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
         tr.innerHTML = `
             <td class="border border-slate-300 p-2 font-medium">
-                <div class="text-slate-900 font-bold">${item.name}</div>
-                <div class="text-[10px] text-indigo-700">測試：${item.target}</div>
+                <div class="text-slate-900 font-bold leading-tight">${item.nameZh}</div>
+                <div class="text-[10px] text-indigo-700 font-mono mt-0.5">${item.nameEn}</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">測試：${item.target}</div>
             </td>
-            <td class="border border-slate-300 p-2 text-center">
-                <div class="flex justify-center gap-2">
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_pain" value="no" checked class="custom-radio" onchange="runEvaluation()">
-                        <span>無痛</span>
+            <td class="border border-slate-300 p-2 text-left whitespace-nowrap pl-3">
+                <div class="flex flex-col gap-1 items-start justify-center">
+                    <label class="flex items-center gap-1.5 cursor-pointer text-slate-700">
+                        <input type="radio" name="${item.id}_pain" value="no" checked class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>無痛 (No pain)</span>
                     </label>
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_pain" value="yes" class="custom-radio" onchange="runEvaluation()">
-                        <span class="text-rose-600 font-bold">誘發疼痛</span>
+                    <label class="flex items-center gap-1.5 cursor-pointer text-rose-600 font-bold">
+                        <input type="radio" name="${item.id}_pain" value="yes" class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>誘發疼痛 (Pain)</span>
                     </label>
                 </div>
             </td>
-            <td class="border border-slate-300 p-2 text-center">
-                <div class="flex justify-center gap-2">
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_strength" value="strong" checked class="custom-radio" onchange="runEvaluation()">
+            <td class="border border-slate-300 p-2 text-left whitespace-nowrap pl-3">
+                <div class="flex flex-col gap-1 items-start justify-center">
+                    <label class="flex items-center gap-1.5 cursor-pointer text-slate-700">
+                        <input type="radio" name="${item.id}_strength" value="strong" checked class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
                         <span>有力 (5分)</span>
                     </label>
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="${item.id}_strength" value="weak" class="custom-radio" onchange="runEvaluation()">
-                        <span class="text-amber-700 font-semibold">無力 (&lt;4分)</span>
+                    <label class="flex items-center gap-1.5 cursor-pointer text-amber-700 font-semibold">
+                        <input type="radio" name="${item.id}_strength" value="weak" class="custom-radio" onchange="syncCurrentFormToState(); runEvaluation();">
+                        <span>無力 (&lt;4分)</span>
                     </label>
                 </div>
             </td>
             <td class="border border-slate-300 p-2">
-                <input type="text" name="${item.id}_loc_custom" placeholder="預設：${item.defaultLoc}" class="w-full text-[11px] border border-slate-300 rounded px-1.5 py-1 focus:outline-none focus:border-indigo-600" oninput="runEvaluation()">
+                <input type="text" name="${item.id}_loc_custom" placeholder="預設解剖位置：${item.defaultLoc}" class="w-full text-[11px] border border-slate-300 rounded px-1.5 py-1 focus:outline-none focus:border-indigo-600" oninput="syncCurrentFormToState(); runEvaluation();">
             </td>
         `;
         rimTbody.appendChild(tr);
     });
 
-    // 核心診斷演算法：依據 Cyriax 交叉比對邏輯計算
-    function runEvaluation() {
-        // 讀取紅旗症狀
-        const rf_wb = document.getElementById('rf_wb').checked;
-        const rf_lat = document.getElementById('rf_lat').checked;
-        const rf_med = document.getElementById('rf_med').checked;
-        const rf_nav = document.getElementById('rf_nav').checked;
-        const hasRedFlag = rf_wb || rf_lat || rf_med || rf_nav;
+    // 將畫面上的勾選狀態同步至當前側 (currentSide) 的 state
+    function syncCurrentFormToState() {
+        const sideData = state[currentSide];
+        if (!sideData) return;
 
-        // 讀取 RIM 阻力測試
-        const rim_df_pain = document.querySelector('input[name="rim_df_pain"]:checked')?.value === 'yes';
-        const rim_df_weak = document.querySelector('input[name="rim_df_strength"]:checked')?.value === 'weak';
-
-        const rim_pf_pain = document.querySelector('input[name="rim_pf_pain"]:checked')?.value === 'yes';
-        const rim_pf_weak = document.querySelector('input[name="rim_pf_strength"]:checked')?.value === 'weak';
-
-        const rim_inv_pain = document.querySelector('input[name="rim_inv_pain"]:checked')?.value === 'yes';
-        const rim_inv_weak = document.querySelector('input[name="rim_inv_strength"]:checked')?.value === 'weak';
-
-        const rim_ev_pain = document.querySelector('input[name="rim_ev_pain"]:checked')?.value === 'yes';
-        const rim_ev_weak = document.querySelector('input[name="rim_ev_strength"]:checked')?.value === 'weak';
-
-        // 讀取 PROM 被動活動
-        const prom_df_pain = document.querySelector('input[name="prom_df_status"]:checked')?.value === 'pain';
-        const prom_pf_pain = document.querySelector('input[name="prom_pf_status"]:checked')?.value === 'pain';
-        const prom_inv_pain = document.querySelector('input[name="prom_inv_status"]:checked')?.value === 'pain';
-        const prom_ev_pain = document.querySelector('input[name="prom_ev_status"]:checked')?.value === 'pain';
-        const prom_pf_inv_pain = document.querySelector('input[name="prom_pf_inv_status"]:checked')?.value === 'pain';
-
-        // 讀取細部標籤
-        const prom_inv_locs = Array.from(document.querySelectorAll('input[name="prom_inv_loc"]:checked')).map(el => el.value);
-        const prom_ev_locs = Array.from(document.querySelectorAll('input[name="prom_ev_loc"]:checked')).map(el => el.value);
-        const prom_df_locs = Array.from(document.querySelectorAll('input[name="prom_df_loc"]:checked')).map(el => el.value);
-        const prom_pf_locs = Array.from(document.querySelectorAll('input[name="prom_pf_loc"]:checked')).map(el => el.value);
-        const prom_pf_inv_locs = Array.from(document.querySelectorAll('input[name="prom_pf_inv_loc"]:checked')).map(el => el.value);
+        // Ottawa 紅旗
+        sideData.rf_wb = document.getElementById('rf_wb').checked;
+        sideData.rf_lat = document.getElementById('rf_lat').checked;
+        sideData.rf_med = document.getElementById('rf_med').checked;
+        sideData.rf_nav = document.getElementById('rf_nav').checked;
 
         // AROM
-        const arom_df_pain = document.querySelector('input[name="arom_df_status"]:checked')?.value === 'pain';
-        const arom_pf_pain = document.querySelector('input[name="arom_pf_status"]:checked')?.value === 'pain';
-        const arom_inv_pain = document.querySelector('input[name="arom_inv_status"]:checked')?.value === 'pain';
-        const arom_ev_pain = document.querySelector('input[name="arom_ev_status"]:checked')?.value === 'pain';
+        aromData.forEach(item => {
+            const status = document.querySelector(`input[name="${item.id}_status"]:checked`)?.value || 'normal';
+            const locs = Array.from(document.querySelectorAll(`input[name="${item.id}_loc"]:checked`)).map(cb => cb.value);
+            const rom = document.querySelector(`select[name="${item.id}_rom"]`)?.value || 'full';
+            sideData.arom[item.id] = { status, locations: locs, rom };
+        });
 
-        // 鑑別判讀陣列
+        // PROM
+        promData.forEach(item => {
+            const status = document.querySelector(`input[name="${item.id}_status"]:checked`)?.value || 'normal';
+            const locs = Array.from(document.querySelectorAll(`input[name="${item.id}_loc"]:checked`)).map(cb => cb.value);
+            const endfeel = document.querySelector(`select[name="${item.id}_endfeel"]`)?.value || 'normal';
+            sideData.prom[item.id] = { status, locations: locs, endfeel };
+        });
+
+        // RIM
+        rimData.forEach(item => {
+            const pain = document.querySelector(`input[name="${item.id}_pain"]:checked`)?.value || 'no';
+            const strength = document.querySelector(`input[name="${item.id}_strength"]:checked`)?.value || 'strong';
+            const loc_custom = document.querySelector(`input[name="${item.id}_loc_custom"]`)?.value || '';
+            sideData.rim[item.id] = { pain, strength, loc_custom };
+        });
+    }
+
+    // 將 state 載入至畫面上
+    function loadStateToForm(side) {
+        const sideData = state[side];
+        if (!sideData) return;
+
+        document.getElementById('rf_wb').checked = sideData.rf_wb;
+        document.getElementById('rf_lat').checked = sideData.rf_lat;
+        document.getElementById('rf_med').checked = sideData.rf_med;
+        document.getElementById('rf_nav').checked = sideData.rf_nav;
+
+        // AROM
+        aromData.forEach(item => {
+            const val = sideData.arom[item.id];
+            const radio = document.querySelector(`input[name="${item.id}_status"][value="${val.status}"]`);
+            if (radio) radio.checked = true;
+            document.querySelectorAll(`input[name="${item.id}_loc"]`).forEach(cb => {
+                cb.checked = val.locations.includes(cb.value);
+            });
+            const sel = document.querySelector(`select[name="${item.id}_rom"]`);
+            if (sel) sel.value = val.rom;
+        });
+
+        // PROM
+        promData.forEach(item => {
+            const val = sideData.prom[item.id];
+            const radio = document.querySelector(`input[name="${item.id}_status"][value="${val.status}"]`);
+            if (radio) radio.checked = true;
+            document.querySelectorAll(`input[name="${item.id}_loc"]`).forEach(cb => {
+                cb.checked = val.locations.includes(cb.value);
+            });
+            const sel = document.querySelector(`select[name="${item.id}_endfeel"]`);
+            if (sel) sel.value = val.endfeel;
+        });
+
+        // RIM
+        rimData.forEach(item => {
+            const val = sideData.rim[item.id];
+            const radioPain = document.querySelector(`input[name="${item.id}_pain"][value="${val.pain}"]`);
+            if (radioPain) radioPain.checked = true;
+            const radioStr = document.querySelector(`input[name="${item.id}_strength"][value="${val.strength}"]`);
+            if (radioStr) radioStr.checked = true;
+            const textLoc = document.querySelector(`input[name="${item.id}_loc_custom"]`);
+            if (textLoc) textLoc.value = val.loc_custom;
+        });
+    }
+
+    // 處理患側下拉選單切換
+    function handleSideChange() {
+        const sideSelect = document.getElementById('affectedSide').value;
+        const tabContainer = document.getElementById('bilateralTabContainer');
+        const activeSideLabel = document.getElementById('activeSideLabel');
+
+        syncCurrentFormToState();
+
+        if (sideSelect === 'bilateral') {
+            tabContainer.classList.remove('hidden');
+            switchSideView('right');
+        } else {
+            tabContainer.classList.add('hidden');
+            currentSide = sideSelect;
+            activeSideLabel.innerText = currentSide === 'right' ? '右踝 (Right)' : '左踝 (Left)';
+            loadStateToForm(currentSide);
+            runEvaluation();
+        }
+    }
+
+    // 切換雙踝左右分頁
+    function switchSideView(targetSide) {
+        syncCurrentFormToState();
+        currentSide = targetSide;
+
+        const btnR = document.getElementById('tabBtnRight');
+        const btnL = document.getElementById('tabBtnLeft');
+        const label = document.getElementById('activeSideLabel');
+
+        if (targetSide === 'right') {
+            btnR.className = 'side-tab-btn active px-3 py-1 rounded border border-slate-300 font-medium transition';
+            btnL.className = 'side-tab-btn px-3 py-1 rounded border border-slate-300 bg-white text-slate-700 font-medium transition';
+            label.innerText = '右踝 (Right)';
+        } else {
+            btnL.className = 'side-tab-btn active px-3 py-1 rounded border border-slate-300 font-medium transition';
+            btnR.className = 'side-tab-btn px-3 py-1 rounded border border-slate-300 bg-white text-slate-700 font-medium transition';
+            label.innerText = '左踝 (Left)';
+        }
+
+        loadStateToForm(currentSide);
+        runEvaluation();
+    }
+
+    // 計算特定患側的 STTT 推論演算法
+    function calculateDiagnosticsForSide(side) {
+        const data = state[side];
+        const rf_wb = data.rf_wb;
+        const rf_lat = data.rf_lat;
+        const rf_med = data.rf_med;
+        const rf_nav = data.rf_nav;
+        const hasRedFlag = rf_wb || rf_lat || rf_med || rf_nav;
+
+        const rim_df_pain = data.rim.rim_df.pain === 'yes';
+        const rim_df_weak = data.rim.rim_df.strength === 'weak';
+        const rim_pf_pain = data.rim.rim_pf.pain === 'yes';
+        const rim_pf_weak = data.rim.rim_pf.strength === 'weak';
+        const rim_inv_pain = data.rim.rim_inv.pain === 'yes';
+        const rim_inv_weak = data.rim.rim_inv.strength === 'weak';
+        const rim_ev_pain = data.rim.rim_ev.pain === 'yes';
+        const rim_ev_weak = data.rim.rim_ev.strength === 'weak';
+
+        const prom_df_pain = data.prom.prom_df.status === 'pain';
+        const prom_pf_pain = data.prom.prom_pf.status === 'pain';
+        const prom_inv_pain = data.prom.prom_inv.status === 'pain';
+        const prom_ev_pain = data.prom.prom_ev.status === 'pain';
+        const prom_pf_inv_pain = data.prom.prom_pf_inv.status === 'pain';
+
+        const prom_df_locs = data.prom.prom_df.locations;
+        const prom_pf_locs = data.prom.prom_pf.locations;
+        const prom_inv_locs = data.prom.prom_inv.locations;
+        const prom_ev_locs = data.prom.prom_ev.locations;
+        const prom_pf_inv_locs = data.prom.prom_pf_inv.locations;
+
+        const arom_df_pain = data.arom.arom_df.status === 'pain';
+        const arom_pf_pain = data.arom.arom_pf.status === 'pain';
+        const arom_inv_pain = data.arom.arom_inv.status === 'pain';
+        const arom_ev_pain = data.arom.arom_ev.status === 'pain';
+
         let suspicions = [];
         let tissueType = '待分類';
         let tissueColor = 'bg-slate-200 text-slate-700';
-        let tissueDesc = '';
+        let tissueDesc = '等長阻力疼痛偏向收縮性；被動拉長/同向疼痛受限偏向非收縮性。';
         let dept = '復健科 (物理醫學與復健科) 或 骨科 / 運動醫學門診';
         let exams = '理學檢查配合骨骼肌肉超音波 (Musculoskeletal Ultrasound) 評估。';
 
-        // 統計陽性數
-        const totalPositives = [
-            rim_df_pain, rim_pf_pain, rim_inv_pain, rim_ev_pain,
-            prom_df_pain, prom_pf_pain, prom_inv_pain, prom_ev_pain, prom_pf_inv_pain,
-            arom_df_pain, arom_pf_pain, arom_inv_pain, arom_ev_pain
-        ].filter(Boolean).length;
-
-        // 1. 紅旗警訊判斷
+        // 1. Ottawa 紅旗
         if (hasRedFlag) {
             let rfItems = [];
             if (rf_wb) rfItems.push('無法負重走4步');
             if (rf_lat) rfItems.push('外踝骨緣壓痛');
             if (rf_med) rfItems.push('內踝骨緣壓痛');
-            if (rf_nav) rfItems.push('舟狀骨或第5蹠骨基底壓痛');
+            if (rf_nav) rfItems.push('舟狀骨/第5蹠骨基底壓痛');
 
             suspicions.push({
                 name: '⚠️ 渥太華骨折紅旗警訊陽性 (Ottawa Ankle Rules Positive)',
-                desc: `出現高風險徵兆（${rfItems.join('、')}），強烈懷疑潛在踝部骨折 (骨裂) 或第五蹠骨骨折 (Jones fracture)。`,
+                desc: `出現高風險徵兆（${rfItems.join('、')}），強烈懷疑潛在骨折或骨裂。`,
                 priority: 100
             });
             dept = '醫院急診 或 骨科專科門診 (優先照 X 光放射線攝影)';
             exams = '需立即安排 Ankle / Foot 系列 X 光攝影以排除骨折。';
         }
 
-        // 2. 腓骨肌腱 (Peroneal Tendinopathy / Strain)
-        // 典型：抗阻外翻痛 ＋ 被動內翻拉長痛
+        // 2. 腓骨肌腱
         if (rim_ev_pain) {
             const isPeronealStretched = prom_inv_pain || prom_inv_locs.includes('peroneal_stretch');
             suspicions.push({
                 name: '外踝後方：腓骨長短肌腱病變 / 肌腱拉傷 (Peroneal Tendon)',
-                desc: '符合「抗阻外翻誘發疼痛」典型收縮性表徵，' + (isPeronealStretched ? '且被動內翻伸展時加劇牽拉痛，高機率為腓骨肌腱炎或半脫位。' : '伴隨肌力或外踝後方壓痛。'),
+                desc: '符合「等長抗阻外翻痛」典型收縮性表徵，' + (isPeronealStretched ? '且被動內翻伸展時加劇牽拉痛。' : '伴隨肌力下降或外踝後方壓痛。'),
                 priority: isPeronealStretched ? 90 : 75,
                 isContractile: true
             });
         }
 
-        // 3. 前距腓韌帶損傷 (ATFL Sprain)
-        // 典型：被動蹠屈加內翻劇痛 (或被動內翻外踝前下方痛) ＋ 但抗阻外翻/阻力大多不痛有力
+        // 3. 前距腓韌帶 ATFL
         const atflStressPositive = prom_pf_inv_pain || prom_pf_inv_locs.includes('atfl_stress') || (prom_inv_pain && prom_inv_locs.includes('cfl_atfl'));
         if (atflStressPositive && !rim_ev_pain) {
             suspicions.push({
@@ -767,21 +1015,20 @@
             });
         }
 
-        // 4. 跟腓韌帶損傷 (CFL Sprain)
+        // 4. 跟腓韌帶 CFL
         if (prom_inv_pain && prom_inv_locs.includes('cfl_atfl') && !atflStressPositive && !rim_ev_pain) {
             suspicions.push({
                 name: '外踝正下方：跟腓韌帶 (CFL) 扭傷',
-                desc: '被動內翻中立位引發外踝正下方疼痛，但抗阻外翻肌力正常。',
+                desc: '被動內翻引發外踝正下方疼痛，但抗阻外翻肌力正常。',
                 priority: 80,
                 isNonContractile: true
             });
         }
 
-        // 5. 阿基里斯腱 / 小腿三頭肌 (Achilles Tendinopathy / Gastroc Strain)
-        // 典型：抗阻蹠屈痛 ＋ 被動背屈拉長痛
+        // 5. 阿基里斯腱
         if (rim_pf_pain) {
             const isAchillesStretched = prom_df_pain || prom_df_locs.includes('post_stretch');
-            const weakness = rim_pf_weak ? '伴隨明顯無力 (需注意部分撕裂或阿基里斯腱斷裂風險)' : '肌力尚維持正常';
+            const weakness = rim_pf_weak ? '伴隨明顯無力 (需特別注意部分撕裂或阿基里斯腱斷裂風險)' : '肌力尚維持正常';
             suspicions.push({
                 name: '小腿後側 / 腳後跟：阿基里斯腱病變或小腿深層肌拉傷',
                 desc: `符合等長抗阻蹠屈劇痛，${weakness}。` + (isAchillesStretched ? '被動背屈到底時腱部牽張疼痛加劇。' : ''),
@@ -789,12 +1036,11 @@
                 isContractile: true
             });
             if (rim_pf_weak) {
-                exams = '建議安排肌肉骨骼超音波，並施測 Thompson test 排除阿基里斯腱完全斷裂。';
+                exams = '建議安排肌肉骨骼超音波，並施測 Thompson test 排除阿基里斯腱斷裂。';
             }
         }
 
-        // 6. 脛前肌腱 / 背屈肌群病變 (Tibialis Anterior / Extensor Tendons)
-        // 典型：抗阻背屈痛 ＋ 被動蹠屈拉長痛
+        // 6. 脛前肌腱
         if (rim_df_pain) {
             const isDFStretched = prom_pf_pain || prom_pf_locs.includes('ant_stretch');
             suspicions.push({
@@ -805,8 +1051,7 @@
             });
         }
 
-        // 7. 脛後肌腱病變 (Posterior Tibial Tendon Dysfunction, PTTD)
-        // 典型：抗阻內翻(偏蹠屈)痛 ＋ 被動外翻背屈拉長痛 (內踝後方/舟狀骨)
+        // 7. 脛後肌腱 (PTTD)
         if (rim_inv_pain) {
             const isPTTStretched = prom_ev_pain || prom_ev_locs.includes('tib_stretch');
             suspicions.push({
@@ -817,24 +1062,23 @@
             });
         }
 
-        // 8. 內側三角韌帶損傷 (Deltoid Ligament Sprain)
+        // 8. 內側三角韌帶
         if ((prom_ev_pain || prom_ev_locs.includes('deltoid')) && !rim_ev_pain && !rim_inv_pain) {
             suspicions.push({
                 name: '內踝下方：三角韌帶 (Deltoid Ligament) 扭傷',
-                desc: '被動外翻時內踝韌帶承受高張力誘發疼痛，等長阻力內外翻測試均正常有力。',
+                desc: '被動外翻時內踝韌帶承受高張力誘發疼痛，等長阻力內外翻測試均正常。',
                 priority: 82,
                 isNonContractile: true
             });
         }
 
-        // 9. 關節囊 / 前後踝夾擠症候群 (Ankle Impingement)
-        // 主動與被動同一方向在關節線疼痛，但抗阻通常無痛有力
+        // 9. 關節夾擠
         const antImpingement = (arom_df_pain && prom_df_locs.includes('ant_pinch') && !rim_df_pain);
         const postImpingement = (arom_pf_pain && prom_pf_locs.includes('post_pinch') && !rim_pf_pain);
         if (antImpingement) {
             suspicions.push({
                 name: '前踝關節夾擠症候群 (Anterior Ankle Impingement)',
-                desc: '主動與被動背屈到底皆於前踝關節處產生擠壓深層痛，但等長抗阻背屈有力無痛，屬非收縮性骨贅/軟組織夾擠。',
+                desc: '主動與被動背屈到底皆於前踝關節處產生擠壓深層痛，但等長抗阻背屈有力無痛。',
                 priority: 81,
                 isNonContractile: true
             });
@@ -848,17 +1092,50 @@
             });
         }
 
-        // 10. 廣泛性劇痛或無特定規律
-        if (totalPositives >= 7 && suspicions.length === 0) {
-            suspicions.push({
-                name: '高刺激性急性廣泛發炎 / 多重組織合併損傷',
-                desc: '阻力與被動牽張在多個方向皆引發保護性肌肉痙攣或廣泛疼痛，急性期暫時不宜過度施測，建議先以消腫與支撐保護為主。',
-                priority: 70
-            });
+        suspicions.sort((a, b) => b.priority - a.priority);
+
+        // 組織類型分類
+        const isContractileCount = suspicions.filter(s => s.isContractile).length;
+        const isNonContractileCount = suspicions.filter(s => s.isNonContractile).length;
+
+        if (hasRedFlag) {
+            tissueType = '🚨 骨骼/關節嚴重疑慮';
+            tissueColor = 'bg-rose-100 text-rose-800 border border-rose-300';
+            tissueDesc = '出現 Ottawa 骨折警訊，需優先排除骨骼皮質斷裂或骨膜撕脫。';
+        } else if (isContractileCount > 0 && isNonContractileCount === 0) {
+            tissueType = '收縮性組織病灶 (Contractile)';
+            tissueColor = 'bg-indigo-100 text-indigo-800 border border-indigo-300';
+            tissueDesc = '病灶主要來自肌腱、肌腹或肌腱骨附著處，抗阻收縮引發張力疼痛。';
+        } else if (isNonContractileCount > 0 && isContractileCount === 0) {
+            tissueType = '非收縮性組織病灶 (Inert / Non-contractile)';
+            tissueColor = 'bg-teal-100 text-teal-800 border border-teal-300';
+            tissueDesc = '病灶來自韌帶、關節囊、滑液膜或關節面夾擠，抗阻肌力通常正常。';
+        } else if (suspicions.length > 0) {
+            tissueType = '混合性組織損傷 (Mixed / Complex)';
+            tissueColor = 'bg-amber-100 text-amber-800 border border-amber-300';
+            tissueDesc = '同時存在韌帶牽伸受損與周圍肌腱保護性拉傷反應。';
         }
 
-        // 排序優先級最高的可能病灶
-        suspicions.sort((a, b) => b.priority - a.priority);
+        return {
+            hasRedFlag,
+            suspicions,
+            tissueType,
+            tissueColor,
+            tissueDesc,
+            dept,
+            exams,
+            data
+        };
+    }
+
+    // 核心評估主函式 (支援單踝與雙踝 SOAP 彙整)
+    function runEvaluation() {
+        syncCurrentFormToState();
+
+        const affectedSelect = document.getElementById('affectedSide').value;
+        const pName = document.getElementById('patientName').value.trim() || '未填寫姓名';
+        const evalDate = document.getElementById('evalDate').value || new Date().toISOString().split('T')[0];
+        const injuryPhase = document.getElementById('injuryPhase').value;
 
         const primaryDiagEl = document.getElementById('primaryDiagnosis');
         const diagDetailsEl = document.getElementById('diagnosisDetails');
@@ -870,81 +1147,31 @@
         const examsEl = document.getElementById('recommendedExams');
         const doctorSummaryBox = document.getElementById('doctorSummaryBox');
 
-        const pName = document.getElementById('patientName').value.trim() || '受檢者';
-        const pSide = document.getElementById('affectedSide').value;
-        const pPhase = document.getElementById('injuryPhase').value;
+        // 當前單側結果（供畫面卡片使用）
+        const curResult = calculateDiagnosticsForSide(currentSide);
 
-        if (suspicions.length > 0) {
-            const topDiag = suspicions[0];
+        if (curResult.suspicions.length > 0) {
+            const topDiag = curResult.suspicions[0];
             primaryDiagEl.innerHTML = `<span class="text-blue-900">${topDiag.name}</span>`;
-            
-            // 次要疑似組織
+
             let subTexts = '';
-            if (suspicions.length > 1) {
-                const subDiags = suspicions.slice(1, 3).map(s => `<li>• 亦需鑑別：<strong>${s.name}</strong></li>`).join('');
+            if (curResult.suspicions.length > 1) {
+                const subDiags = curResult.suspicions.slice(1, 3).map(s => `<li>• 亦需鑑別：<strong>${s.name}</strong></li>`).join('');
                 subTexts = `<div class="mt-2 text-xs font-semibold text-slate-700">其他鑑別組織考慮：<ul class="font-normal text-slate-600 mt-0.5 space-y-0.5">${subDiags}</ul></div>`;
             }
             diagDetailsEl.innerHTML = `<p>${topDiag.desc}</p>${subTexts}`;
-            
+
             statusBadgeEl.innerText = '已完成交叉鑑別判定';
             statusBadgeEl.className = 'bg-emerald-700 text-[11px] px-2 py-0.5 rounded text-white border border-emerald-600';
             floatingDiagEl.innerText = `${topDiag.name.split('：')[1] || topDiag.name}`;
 
-            // 組織歸類
-            const isContractileCount = suspicions.filter(s => s.isContractile).length;
-            const isNonContractileCount = suspicions.filter(s => s.isNonContractile).length;
-            
-            if (hasRedFlag) {
-                tissueType = '🚨 骨骼/關節嚴重疑慮';
-                tissueColor = 'bg-rose-100 text-rose-800 border border-rose-300';
-                tissueDesc = '出現 Ottawa 骨折警訊，需優先排除骨骼皮質斷裂或骨膜撕脫。';
-            } else if (isContractileCount > 0 && isNonContractileCount === 0) {
-                tissueType = '收縮性組織病灶 (Contractile)';
-                tissueColor = 'bg-indigo-100 text-indigo-800 border border-indigo-300';
-                tissueDesc = '病灶主要來自肌腱、肌腹或肌腱骨附著處，抗阻收縮引發張力疼痛。';
-            } else if (isNonContractileCount > 0 && isContractileCount === 0) {
-                tissueType = '非收縮性組織病灶 (Inert / Non-contractile)';
-                tissueColor = 'bg-teal-100 text-teal-800 border border-teal-300';
-                tissueDesc = '病灶來自韌帶、關節囊、滑液膜或關節面夾擠，抗阻肌力通常不受影響。';
-            } else {
-                tissueType = '混合性組織損傷 (Mixed / Complex)';
-                tissueColor = 'bg-amber-100 text-amber-800 border border-amber-300';
-                tissueDesc = '同時存在韌帶牽伸受損與周圍肌腱保護性拉傷反應。';
-            }
+            tissueBadgeEl.innerText = curResult.tissueType;
+            tissueBadgeEl.className = `inline-block px-2.5 py-1 rounded text-xs font-bold ${curResult.tissueColor}`;
+            tissueDescEl.innerText = curResult.tissueDesc;
 
-            tissueBadgeEl.innerText = tissueType;
-            tissueBadgeEl.className = `inline-block px-2.5 py-1 rounded text-xs font-bold ${tissueColor}`;
-            tissueDescEl.innerText = tissueDesc;
-
-            deptEl.innerHTML = `建議掛號：<strong class="text-indigo-950 font-bold">${dept}</strong>`;
-            examsEl.innerHTML = `💡 臨床影像檢查建議：${exams}`;
-
-            // 產生速讀病況摘要 (醫師 SBAR 溝通專用)
-            const dateStr = document.getElementById('evalDate').value;
-            const positiveItemsStr = [];
-            if (rim_df_pain) positiveItemsStr.push('抗阻背屈(+)');
-            if (rim_pf_pain) positiveItemsStr.push('抗阻蹠屈(+)');
-            if (rim_inv_pain) positiveItemsStr.push('抗阻內翻(+)');
-            if (rim_ev_pain) positiveItemsStr.push('抗阻外翻(+)');
-            if (prom_df_pain) positiveItemsStr.push('被動背屈牽伸(+)');
-            if (prom_pf_pain) positiveItemsStr.push('被動蹠屈牽伸(+)');
-            if (prom_inv_pain) positiveItemsStr.push('被動內翻牽伸(+)');
-            if (prom_ev_pain) positiveItemsStr.push('被動外翻牽伸(+)');
-            if (prom_pf_inv_pain) positiveItemsStr.push('被動蹠屈內翻應力(+)');
-
-            const summaryText = `【STTT 理學檢查快速就醫轉介單】\n` +
-                `• 個案姓名：${pName} | 評估日期：${dateStr}\n` +
-                `• 患側：${pSide} | 病程：${pPhase}\n` +
-                `• STTT 陽性表現：${positiveItemsStr.length > 0 ? positiveItemsStr.join('、') : '各測試暫無明顯劇痛'}\n` +
-                `• 組織分類：${tissueType}\n` +
-                `• 臨床優先懷疑組織：${topDiag.name}\n` +
-                `• 臨床判讀備註：${topDiag.desc}\n` +
-                `• 建議後續檢查：${exams}`;
-
-            doctorSummaryBox.innerText = summaryText;
-
+            deptEl.innerHTML = `建議掛號：<strong class="text-indigo-950 font-bold">${curResult.dept}</strong>`;
+            examsEl.innerHTML = `💡 臨床影像檢查建議：${curResult.exams}`;
         } else {
-            // 無勾選或全正常
             primaryDiagEl.innerText = '目前無特定陽性疼痛反應 (測試表現大致正常)';
             diagDetailsEl.innerText = '若您仍有持續性隱痛或步態不適，建議於上方勾選在特定動作角度（如被動到底或全力抗阻）時誘發微痛的部位。';
             statusBadgeEl.innerText = '等待勾選評估項目';
@@ -953,27 +1180,96 @@
             tissueBadgeEl.innerText = '待分類';
             tissueBadgeEl.className = 'inline-block px-2.5 py-1 rounded text-xs font-bold bg-slate-200 text-slate-700';
             tissueDescEl.innerText = '等長阻力疼痛偏向收縮性；被動拉長/同向疼痛受限偏向非收縮性。';
-            doctorSummaryBox.innerText = '尚未勾選出陽性症狀。若完成測試後此處將自動產生診所就醫溝通摘要。';
         }
+
+        // 產生標準 SOAP 病歷摘要
+        let soapText = '';
+
+        if (affectedSelect === 'bilateral') {
+            const resR = calculateDiagnosticsForSide('right');
+            const resL = calculateDiagnosticsForSide('left');
+
+            soapText = `【腳踝理學檢查病歷記錄單 (SOAP)】\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【S (Subjective) - 主訴與基本資料】\n` +
+                `• 個案姓名：${pName}  |  評估日期：${evalDate}\n` +
+                `• 患側部位：雙側踝關節 (Bilateral Ankles)\n` +
+                `• 受傷病程：${injuryPhase}\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【O (Objective) - 客觀物理檢查與 STTT 發現】\n` +
+                formatSideObjective('右踝 (Right)', resR) + '\n' +
+                formatSideObjective('左踝 (Left)', resL) + '\n' +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【A (Assessment) - 臨床評估與組織鑑別】\n` +
+                `[右踝]：${resR.tissueType}\n ➔ 優先懷疑：${resR.suspicions[0]?.name || '無顯著陽性異常'}\n` +
+                `[左踝]：${resL.tissueType}\n ➔ 優先懷疑：${resL.suspicions[0]?.name || '無顯著陽性異常'}\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【P (Plan) - 就醫轉介與處置計畫】\n` +
+                `• 建議掛號科別：${resR.hasRedFlag || resL.hasRedFlag ? '急診 / 骨科 (排除骨折)' : '復健科 (物理醫學與復健科) 或 運動醫學門診'}\n` +
+                `• 建議影像學評估：骨骼肌肉超音波 (US)；若有 Ottawa 骨折警訊請照 Foot/Ankle X-ray\n` +
+                `• 急性期防護指引：遵循 PEACE & LOVE 原則，適度護踝支撐防護，避免重載加劇組織牽扯。`;
+        } else {
+            const sideName = affectedSelect === 'right' ? '右踝 (Right)' : '左踝 (Left)';
+            const res = curResult;
+
+            soapText = `【腳踝理學檢查病歷記錄單 (SOAP)】\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【S (Subjective) - 主訴與基本資料】\n` +
+                `• 個案姓名：${pName}  |  評估日期：${evalDate}\n` +
+                `• 評估患側：${sideName}\n` +
+                `• 受傷病程：${injuryPhase}\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【O (Objective) - 客觀物理檢查發現】\n` +
+                formatSideObjective(sideName, res) + '\n' +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【A (Assessment) - 臨床評估推論】\n` +
+                `• 組織分類：${res.tissueType}\n` +
+                `• 優先懷疑：${res.suspicions[0]?.name || '目前測試大致正常，無特定顯著病灶'}\n` +
+                `• 詳細說明：${res.suspicions[0]?.desc || '無特定誘發疼痛'}\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `【P (Plan) - 就醫處置計畫】\n` +
+                `• 建議掛號科別：${res.dept}\n` +
+                `• 建議臨床影像：${res.exams}\n` +
+                `• 初步照護處置：${res.hasRedFlag ? '暫勿負重行走，盡快就醫照 X 光！' : '急性期保護固定與冰敷消腫，亞急性/慢性期循序漸進恢復活動度。'}`;
+        }
+
+        doctorSummaryBox.innerText = soapText;
+    }
+
+    // 格式化單側客觀檢查結果文字 (用於 SOAP 的 O 段落)
+    function formatSideObjective(label, res) {
+        const d = res.data;
+        let redFlagStr = res.hasRedFlag ? '⚠️️ 陽性警告 (符合 Ottawa Ankle Rules)' : '陰性 (排除立即骨折高風險)';
+
+        let posItems = [];
+        if (d.rim.rim_df.pain === 'yes') posItems.push(`RIM背屈痛(${d.rim.rim_df.strength === 'weak' ? '無力' : '有力'})`);
+        if (d.rim.rim_pf.pain === 'yes') posItems.push(`RIM蹠屈痛(${d.rim.rim_pf.strength === 'weak' ? '無力' : '有力'})`);
+        if (d.rim.rim_inv.pain === 'yes') posItems.push(`RIM內翻痛(${d.rim.rim_inv.strength === 'weak' ? '無力' : '有力'})`);
+        if (d.rim.rim_ev.pain === 'yes') posItems.push(`RIM外翻痛(${d.rim.rim_ev.strength === 'weak' ? '無力' : '有力'})`);
+
+        if (d.prom.prom_df.status === 'pain') posItems.push('PROM被動背屈牽伸痛');
+        if (d.prom.prom_pf.status === 'pain') posItems.push('PROM被動蹠屈牽伸痛');
+        if (d.prom.prom_inv.status === 'pain') posItems.push('PROM被動內翻牽伸痛');
+        if (d.prom.prom_ev.status === 'pain') posItems.push('PROM被動外翻牽伸痛');
+        if (d.prom.prom_pf_inv.status === 'pain') posItems.push('PROM蹠屈內翻應力(+)');
+
+        if (d.arom.arom_df.status === 'pain') posItems.push('AROM主動背屈痛');
+        if (d.arom.arom_pf.status === 'pain') posItems.push('AROM主動蹠屈痛');
+        if (d.arom.arom_inv.status === 'pain') posItems.push('AROM主動內翻痛');
+        if (d.arom.arom_ev.status === 'pain') posItems.push('AROM主動外翻痛');
+
+        return `[${label}]\n` +
+               `  • Ottawa 骨折紅旗篩檢：${redFlagStr}\n` +
+               `  • 誘發疼痛/陽性反應：${posItems.length > 0 ? posItems.join('、') : '各項測試未誘發顯著疼痛'}\n` +
+               `  • ROM 受限情況：背屈(${d.arom.arom_df.rom})、蹠屈(${d.arom.arom_pf.rom})、內翻(${d.arom.arom_inv.rom})、外翻(${d.arom.arom_ev.rom})`;
     }
 
     // 快速載入臨床經典範例
     function loadPreset(type) {
-        // 重設清空所有勾選
-        document.querySelectorAll('input[type="radio"]').forEach(radio => {
-            if (radio.value === 'normal' || radio.value === 'no' || radio.value === 'strong') {
-                radio.checked = true;
-            } else {
-                radio.checked = false;
-            }
-        });
-        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        document.querySelectorAll('input[type="text"]').forEach(txt => {
-            if (txt.id !== 'patientName') txt.value = '';
-        });
+        state[currentSide] = initSideData();
+        loadStateToForm(currentSide);
 
         if (type === 'atfl') {
-            // 典型外踝前距腓韌帶(ATFL)扭傷
             document.querySelector('input[name="prom_pf_inv_status"][value="pain"]').checked = true;
             const cb1 = document.querySelector('input[name="prom_pf_inv_loc"][value="atfl_stress"]');
             if (cb1) cb1.checked = true;
@@ -982,46 +1278,42 @@
             if (cb2) cb2.checked = true;
             document.querySelector('input[name="arom_inv_status"][value="pain"]').checked = true;
         } else if (type === 'achilles') {
-            // 阿基里斯腱炎
             document.querySelector('input[name="rim_pf_pain"][value="yes"]').checked = true;
             document.querySelector('input[name="prom_df_status"][value="pain"]').checked = true;
             const cb = document.querySelector('input[name="prom_df_loc"][value="post_stretch"]');
             if (cb) cb.checked = true;
             document.querySelector('input[name="arom_pf_status"][value="pain"]').checked = true;
         } else if (type === 'peroneal') {
-            // 腓骨長短肌腱病變
             document.querySelector('input[name="rim_ev_pain"][value="yes"]').checked = true;
             document.querySelector('input[name="prom_inv_status"][value="pain"]').checked = true;
             const cb = document.querySelector('input[name="prom_inv_loc"][value="peroneal_stretch"]');
             if (cb) cb.checked = true;
             document.querySelector('input[name="arom_ev_status"][value="pain"]').checked = true;
         } else if (type === 'tib_ant') {
-            // 脛前肌腱炎
             document.querySelector('input[name="rim_df_pain"][value="yes"]').checked = true;
             document.querySelector('input[name="prom_pf_status"][value="pain"]').checked = true;
             const cb = document.querySelector('input[name="prom_pf_loc"][value="ant_stretch"]');
             if (cb) cb.checked = true;
         } else if (type === 'tib_post') {
-            // 脛後肌腱炎
             document.querySelector('input[name="rim_inv_pain"][value="yes"]').checked = true;
             document.querySelector('input[name="prom_ev_status"][value="pain"]').checked = true;
             const cb = document.querySelector('input[name="prom_ev_loc"][value="tib_stretch"]');
             if (cb) cb.checked = true;
         }
 
+        syncCurrentFormToState();
         runEvaluation();
-        showToast('已載入典型範例，可直接查看診斷報告！');
+        showToast('已載入典型範例，可直接查看診斷與 SOAP 報告！');
     }
 
-    // 複製摘要至剪貼簿
+    // 複製 SOAP 摘要至剪貼簿
     function copySummary() {
         const text = document.getElementById('doctorSummaryBox').innerText;
         if (!text || text.includes('尚未填寫測試數據')) {
-            showToast('請先勾選評估項目產生摘要！');
+            showToast('請先勾選評估項目產生 SOAP 摘要！');
             return;
         }
         
-        // 兼容安全模式使用 execCommand
         const tempTextarea = document.createElement('textarea');
         tempTextarea.value = text;
         tempTextarea.style.position = 'fixed';
@@ -1030,7 +1322,7 @@
         tempTextarea.select();
         try {
             document.execCommand('copy');
-            showToast('已複製速讀病況摘要，可直接貼到通訊軟體或給醫師！');
+            showToast('已複製標準 SOAP 病歷摘要，可直接提供給醫師！');
         } catch (err) {
             showToast('複製失敗，請手動選取文字複製。');
         }
