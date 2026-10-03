@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> DNS 動作品質觀察表｜死蟲式・四足趴・下犬式</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        clinical: {
+                            blue: '#1e40af',
+                            darkBlue: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", -apple-system, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* A4 紙本規格容器 (比照 BBS 樣式) */
+        .a4-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            padding: 14mm 15mm;
+            transition: all 0.2s ease;
+        }
+
+        /* 勾選方框自訂樣式 (保留截圖的精簡方框感) */
+        .custom-check {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.15rem;
+            height: 1.15rem;
+            border: 1.5px solid #9ca3af;
+            border-radius: 3px;
+            background: transparent;
+            cursor: pointer;
+            display: inline-grid;
+            place-content: center;
+            transition: all 0.15s ease-in-out;
+        }
+        .custom-check:hover {
+            border-color: #3b82f6;
+        }
+        .custom-check:checked {
+            background-color: #1e40af;
+            border-color: #1e40af;
+        }
+        .dark .custom-check {
+            border-color: #6b7280;
+        }
+        .dark .custom-check:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .custom-check:checked::after {
+            content: "✓";
+            font-size: 11px;
+            color: #ffffff;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        /* 螢幕專用浮動控制列 (比照 BBS 樣式) */
+        .sticky-score {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(30, 58, 138, 0.92);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 列印模式：強制白底黑字、隱藏非列印元素 */
+        @media print {
+            .no-print { 
+                display: none !important; 
+            }
+            body { 
+                background: white !important; 
+                color: black !important;
+                padding: 0 !important;
+            }
+            .a4-container { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                width: 100% !important;
+                padding: 8mm 10mm !important;
+                background: white !important;
+                color: black !important;
+            }
+            .section-block { 
+                page-break-inside: avoid; 
+            }
+            textarea {
+                border-color: #e5e7eb !important;
+                background: white !important;
+                color: black !important;
+            }
+            .custom-check {
+                border-color: #4b5563 !important;
+            }
+            .custom-check:checked {
+                background-color: #1f2937 !important;
+                border-color: #1f2937 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 p-2 sm:p-4">
+
+<div class="a4-container bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-lg rounded-sm">
+    <!-- Header 表頭資訊 -->
+    <header class="border-b-2 border-gray-800 dark:border-zinc-600 pb-3 mb-5">
+        <h1 class="text-xl sm:text-2xl font-bold text-center tracking-wide text-gray-900 dark:text-white">動作品質觀察表</h1>
+        <p class="text-center text-xs text-gray-500 dark:text-zinc-400 mt-1">死蟲式・四足趴・下犬式｜左右側代償紀錄</p>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 text-xs mt-4 text-gray-700 dark:text-zinc-300">
+            <div class="flex items-center">姓名：<input type="text" class="border-b border-gray-400 dark:border-zinc-600 bg-transparent outline-none flex-1 px-1 pb-0.5 text-xs"></div>
+            <div class="flex items-center">日期：<input type="date" class="border-b border-gray-400 dark:border-zinc-600 bg-transparent outline-none flex-1 px-1 pb-0.5 text-xs"></div>
+        </div>
+    </header>
+
+    <!-- 分頁按鈕列 (no-print) -->
+    <div class="no-print flex items-center justify-between gap-2 mb-4 border-b border-gray-200 dark:border-zinc-800 pb-3">
+        <div class="flex gap-1.5 flex-wrap" id="tabs"></div>
+        <div class="text-[11px] text-gray-500 dark:text-zinc-400 select-none">
+            <span class="inline-block w-2.5 h-2.5 border border-gray-400 rounded-sm mr-1"></span>勾選表示觀察到代償
+        </div>
+    </div>
+
+    <!-- 評估內容容器 -->
+    <div id="content" class="space-y-6"></div>
+
+    <!-- 底部判讀原則 -->
+    <footer class="mt-6 border-t-2 border-gray-800 dark:border-zinc-700 pt-3 text-[10.5px] text-gray-600 dark:text-zinc-400 leading-relaxed">
+        <span class="font-bold text-gray-900 dark:text-zinc-200">判讀原則：</span>本表用於記錄動作品質與代償，不以單一代償直接推論特定肌群無力。建議記錄「動作條件 → 觀察到的代償 → 提示後是否改善」。
+    </footer>
+</div>
+
+<!-- 螢幕浮動操作工具列 (列印時自動隱藏) -->
+<div class="sticky-score no-print">
+    <!-- 切換深色 / 淺色按鈕 -->
+    <button onclick="toggleTheme()" id="themeBtn" class="flex items-center gap-1.5 text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-full transition cursor-pointer" title="切換深淺外觀">
+        <span id="themeIcon">☀️</span>
+        <span id="themeText" class="font-medium">淺色</span>
+    </button>
+
+    <div class="h-5 w-px bg-white/30"></div>
+
+    <!-- 計數顯示 -->
+    <div class="flex items-center text-xs">
+        <span class="text-white/80 mr-1.5">代償項:</span>
+        <span id="floatingScore" class="text-base font-bold text-white">0</span>
+    </div>
+
+    <button onclick="clearCurrent()" class="text-xs text-white/80 hover:text-white transition px-2 py-1 underline cursor-pointer">
+        清空
+    </button>
+
+    <!-- 列印 / PDF 匯出 -->
+    <button onclick="window.print()" class="bg-white text-blue-900 hover:bg-blue-50 px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        產出 PDF / 列印
+    </button>
+</div>
+
+<script>
+const exercises = [
+    {
+        num: '1',
+        name: '死蟲式',
+        focus: '比較動作前後胸廓與骨盆位置；腰部接觸方式依訓練目標判讀。',
+        rows: [
+            ['上肢：起始／維持', '肩膀聳起、手臂偏離原定位置、手肘彎曲', true],
+            ['上肢：往頭頂延伸', '手臂向外偏、彎肘縮短槓桿；伴隨肋骨上翻、腰部拱起', true],
+            ['下肢：維持髖膝屈曲', '大腿逐漸靠近胸口或往下掉；膝蓋向內／外偏', true],
+            ['下肢：伸腿／腳跟下放', '大腿外展或旋轉、膝蓋彎曲以縮短槓桿；骨盆被帶動', true],
+            ['軀幹：胸廓／腰椎', '肋骨上翻、腰椎伸展增加；過度捲腹、胸廓抬離床面', true],
+            ['軀幹：骨盆／中軸', '骨盆前傾、旋轉或側移；一側骨盆離開床面', true],
+            ['頭頸／呼吸', '下巴抬起、頭部前伸、頸部明顯繃緊；憋氣', false]
+        ]
+    },
+    {
+        num: '2',
+        name: '四足趴',
+        focus: '抬手、抬腳時分開觀察活動側與支撐側，特別注意肩帶、胸廓與骨盆是否旋轉或側移。',
+        rows: [
+            ['上肢：支撐側', '肩胛內側緣明顯翹起、胸廓向支撐肩下沉；肘過伸或彎曲、手掌局部卸重', true],
+            ['上肢：抬手側', '聳肩、手臂向外偏、彎肘；以軀幹旋轉增加抬手幅度', true],
+            ['下肢：支撐側', '骨盆向支撐髖側移、髖部塌陷；膝蓋滑動或擴大支撐面', true],
+            ['下肢：抬腳側', '髖外展／外旋、骨盆向外打開；抬腿過高伴隨腰椎伸展', true],
+            ['軀幹：胸廓／腰椎', '胸廓下沉、腰部塌陷；過度拱背或骨盆後傾', true],
+            ['軀幹：骨盆／中軸', '肩帶或骨盆旋轉；身體側彎、側移或前後晃動', true],
+            ['頭頸／呼吸', '抬頭、下巴前伸或頭部下垂；憋氣', false]
+        ]
+    },
+    {
+        num: '3',
+        name: '下犬式',
+        focus: '肩胛上轉／上提、膝微彎或腳跟未落地可能是合理調整；應依任務目標、控制品質及症狀判讀。',
+        rows: [
+            ['上肢：雙手／單手支撐', '手掌局部卸重、肘彎曲或過伸；肩胛內側緣翹起、胸廓向支撐肩塌陷', true],
+            ['上肢：抬手側', '彎肘、手臂向外偏；肩帶旋轉或身體側移以完成抬手', true],
+            ['下肢：雙腳／單腳支撐', '膝蓋內夾、足部旋前增加、腳尖外轉；骨盆偏向支撐側', true],
+            ['下肢：抬腳側', '髖外展／外旋、骨盆向外打開；抬腳過高伴隨腰部拱起', true],
+            ['軀幹：胸廓／腰椎', '胸椎屈曲增加、骨盆後傾；或肋骨上翻、腰椎過度伸展', true],
+            ['軀幹：骨盆／中軸', '肩帶與骨盆旋轉、側彎或側移；重心突然前移、身體高度明顯下降', true],
+            ['頭頸／呼吸', '刻意抬頭、頸部過度後仰；憋氣', false]
+        ]
+    }
+];
+
+let currentMode = 'all'; // 'all' (一次瀏覽全部三項動作) 或 0, 1, 2 (單個動作)
+const state = {};
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('movement_theme');
+    const isDark = savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(isDark);
+}
+
+function setTheme(dark) {
+    const html = document.documentElement;
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+    if (dark) {
+        html.classList.add('dark');
+        themeIcon.textContent = '🌙';
+        themeText.textContent = '深色';
+        localStorage.setItem('movement_theme', 'dark');
+    } else {
+        html.classList.remove('dark');
+        themeIcon.textContent = '☀️';
+        themeText.textContent = '淺色';
+        localStorage.setItem('movement_theme', 'light');
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(!isDark);
+}
+
+function key(exIndex, rowIdx, side) {
+    return `${exIndex}-${rowIdx}-${side}`;
+}
+
+function setVal(exIndex, rowIdx, side, val) {
+    state[key(exIndex, rowIdx, side)] = val;
+    updateCount();
+}
+
+function updateCount() {
+    const count = Object.entries(state).filter(([k, v]) => !k.startsWith('note-') && v).length;
+    document.getElementById('floatingScore').textContent = count;
+}
+
+function clearCurrent() {
+    if (currentMode === 'all') {
+        for (const k of Object.keys(state)) delete state[k];
+    } else {
+        for (const k of Object.keys(state)) {
+            if (k.startsWith(`${currentMode}-`) || k === `note-${currentMode}`) {
+                delete state[k];
+            }
+        }
+    }
+    render();
+}
+
+function renderTabs() {
+    const tabs = document.getElementById('tabs');
+    const tabsData = [
+        { id: 'all', label: '全部動作 (A4 列印)' },
+        { id: 0, label: '1. 死蟲式' },
+        { id: 1, label: '2. 四足趴' },
+        { id: 2, label: '3. 下犬式' }
+    ];
+
+    tabs.innerHTML = tabsData.map(t => {
+        const isActive = currentMode === t.id;
+        const activeClass = isActive 
+            ? 'bg-blue-900 text-white dark:bg-blue-600 font-semibold border-blue-900 dark:border-blue-600 shadow-sm' 
+            : 'bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 border-gray-300 dark:border-zinc-700';
+        return `
+            <button 
+                onclick="currentMode=${typeof t.id === 'number' ? t.id : `'${t.id}'`}; render();" 
+                class="border px-3 py-1.5 rounded text-xs transition cursor-pointer ${activeClass}">
+                ${t.label}
+            </button>
+        `;
+    }).join('');
+}
+
+function renderSingleExerciseBlock(e, exIndex) {
+    const rowsHtml = e.rows.map((r, rIdx) => {
+        const isBilateral = r[2] !== false;
+        const isLeftChecked = !!state[key(exIndex, rIdx, 'L')];
+        const isRightChecked = !!state[key(exIndex, rIdx, 'R')];
+        const zebraClass = rIdx % 2 === 1 ? 'bg-gray-50/70 dark:bg-zinc-800/40' : 'bg-transparent';
+
+        return `
+            <tr class="border-b border-gray-200 dark:border-zinc-800 ${zebraClass} hover:bg-blue-50/50 dark:hover:bg-zinc-800/80 transition-colors">
+                <td class="p-2.5 font-medium text-xs text-gray-800 dark:text-zinc-200 w-1/4 align-top border-r border-gray-200 dark:border-zinc-800">
+                    ${r[0]}
+                </td>
+                <td class="p-2.5 text-xs text-gray-700 dark:text-zinc-300 leading-relaxed align-top border-r border-gray-200 dark:border-zinc-800">
+                    ${r[1]}
+                </td>
+                <td class="p-2 text-center align-middle w-14 border-r border-gray-200 dark:border-zinc-800">
+                    ${isBilateral ? `
+                        <input type="checkbox" class="custom-check" ${isLeftChecked ? 'checked' : ''} onchange="setVal(${exIndex}, ${rIdx}, 'L', this.checked)">
+                    ` : `<span class="text-gray-400 dark:text-zinc-600 font-light select-none">—</span>`}
+                </td>
+                <td class="p-2 text-center align-middle w-14">
+                    ${isBilateral ? `
+                        <input type="checkbox" class="custom-check" ${isRightChecked ? 'checked' : ''} onchange="setVal(${exIndex}, ${rIdx}, 'R', this.checked)">
+                    ` : `<span class="text-gray-400 dark:text-zinc-600 font-light select-none">—</span>`}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <section class="section-block">
+            <div class="flex justify-between items-baseline mb-2">
+                <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                    <span class="w-5 h-5 bg-blue-900 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">${e.num}</span>
+                    ${e.name}
+                </h2>
+                <span class="text-[10px] text-gray-400 dark:text-zinc-500">Bilateral Compensation Check</span>
+            </div>
+
+            <div class="overflow-x-auto rounded border border-gray-300 dark:border-zinc-700">
+                <table class="w-full border-collapse text-left text-xs">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 font-semibold">
+                            <th class="p-2 text-left w-1/4 border-r border-gray-300 dark:border-zinc-700">觀察區域</th>
+                            <th class="p-2 text-left border-r border-gray-300 dark:border-zinc-700">常見代償動作</th>
+                            <th class="p-2 text-center w-14 border-r border-gray-300 dark:border-zinc-700">左側</th>
+                            <th class="p-2 text-center w-14">右側</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 觀察重點 (比照 BBS 提示框風格) -->
+            <div class="mt-2.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 p-2.5 rounded text-xs text-blue-950 dark:text-blue-200 leading-relaxed">
+                <span class="font-bold">觀察重點：</span>${e.focus}
+            </div>
+
+            <!-- 臨床紀錄／提示後反應 -->
+            <div class="mt-2">
+                <label class="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1">臨床紀錄／提示後反應</label>
+                <textarea 
+                    class="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 rounded p-2 text-xs text-gray-800 dark:text-zinc-100 outline-none focus:border-blue-700 focus:ring-1 focus:ring-blue-700 min-h-[48px] resize-y placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                    placeholder="例：抬左手 → 右肩支撐下沉 → 骨盆向右移 → 口語提醒後改善"
+                    oninput="state['note-${exIndex}']=this.value"
+                >${state['note-' + exIndex] || ''}</textarea>
+            </div>
+        </section>
+    `;
+}
+
+function render() {
+    renderTabs();
+    const content = document.getElementById('content');
+    if (currentMode === 'all') {
+        content.innerHTML = exercises.map((e, idx) => renderSingleExerciseBlock(e, idx)).join('<div class="my-5 border-b border-dashed border-gray-300 dark:border-zinc-700"></div>');
+    } else {
+        content.innerHTML = renderSingleExerciseBlock(exercises[currentMode], currentMode);
+    }
+    updateCount();
+}
+
+// 頁面初始化
+initTheme();
+render();
+</script>
+</body>
+</html>
